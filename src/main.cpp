@@ -117,9 +117,13 @@ map<string,double> buildIDF(const map<string,int>& df, int totalDocs){
 //TF-IDF function
 map<string,double> buildTFIDF( const map<string,double>& idf,const map<string,int>& tf){
     map<string,double> tfidf;
-    for(auto p: tf){
+    for(auto p : tf){
+
+    if(idf.find(p.first) != idf.end()){
         tfidf[p.first] = p.second * idf.at(p.first);
     }
+
+}
     return tfidf;
 }  
 int main() {
@@ -196,6 +200,23 @@ for(int i = 0; i < tfidf_docs.size(); i++){
 
     cout << endl;
 }*/
+
+//query processing
+string query;
+cout << "Enter query: ";
+getline(cin, query);
+query = preprocess(query);
+vector<string> queryWords = splitWords(query);
+queryWords = filtered(queryWords);
+map<string,int> queryTF = buildTF(queryWords);
+map<string,double> queryTFIDF = buildTFIDF(idf, queryTF);
+
+
+cout << "\nQuery TF-IDF:\n";
+
+for(auto p : queryTFIDF){
+    cout << p.first << " : " << p.second << endl;
+}
 
     return 0;
 }
