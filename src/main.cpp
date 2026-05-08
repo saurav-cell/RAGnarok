@@ -6,6 +6,7 @@
 #include <cctype>
 #include <set>
 #include <cmath>
+#include<stdlib.h>
 
 using namespace std;
 
@@ -160,6 +161,7 @@ double cosineSimilarity(
 }
 int main() {
     string line;
+    vector<string> rawDocuments;
     vector<vector<string>> documents;
 
     ifstream file("../data/docs.txt");
@@ -170,12 +172,18 @@ int main() {
     }
 
     // Preprocessing pipeline
-    while (getline(file, line)) {
-        line = preprocess(line);
-        vector<string> words = splitWords(line);
-        words = filtered(words);
-        documents.push_back(words);
-    }
+   while (getline(file, line)) {
+
+    rawDocuments.push_back(line);
+
+    string processed = preprocess(line);
+
+    vector<string> words = splitWords(processed);
+
+    words = filtered(words);
+
+    documents.push_back(words);
+}
 
     file.close();
 
@@ -244,11 +252,11 @@ map<string,int> queryTF = buildTF(queryWords);
 map<string,double> queryTFIDF = buildTFIDF(idf, queryTF);
 
 
-cout << "\nQuery TF-IDF:\n";
+//cout << "\nQuery TF-IDF:\n";
 
-for(auto p : queryTFIDF){
+/*for(auto p : queryTFIDF){
     cout << p.first << " : " << p.second << endl;
-}
+}*/
 
 // Retrieval
 double bestScore = -1.0;
@@ -258,7 +266,7 @@ for(int i = 0; i < tfidf_docs.size(); i++){
 
     double score = cosineSimilarity(tfidf_docs[i], queryTFIDF);
 
-    cout << "Document " << i << " Similarity: " << score << endl;
+    //cout << "Document " << i << " Similarity: " << score << endl;
 
     if(score > bestScore){
         bestScore = score;
@@ -266,7 +274,41 @@ for(int i = 0; i < tfidf_docs.size(); i++){
     }
 }
 
-cout << "\nBest Matching Document: " << bestDocIndex << endl;
-cout << "Best Similarity Score: " << bestScore << endl;
+//cout << "\nBest Matching Document: " << bestDocIndex << endl;
+
+//cout << "Best Similarity Score: " << bestScore << endl;
+//cout << "\nRetrieved Context:\n";
+//cout << rawDocuments[bestDocIndex] << endl;
+
+//prompt construction
+string prompt =
+    "Use the following context to answer the question.\n"
+    "If the answer is not in the context, say you don't know.\n\n"
+    "Context:\n" +
+    rawDocuments[bestDocIndex] +
+    "\n\nQuestion:\n" +
+    query +
+    "\n\nAnswer:\n";
+
+
+    cout << "\nGenerated Prompt:\n";
+    cout << prompt << endl;
+    ofstream promptFile("prompt.txt");
+
+    promptFile << prompt;
+
+    promptFile.close();
+
+    // Call LLM
+    string command =
+    "cmd /c \"\"C:\\Users\\User_PC\\llama.cpp\\build\\bin\\llama-cli.exe\" "
+    "-m \"C:\\Users\\User_PC\\Downloads\\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf\" "
+    "-f \"prompt.txt\"\"";
+
+    cout << "\nRunning TinyLlama...\n";
+
+    cout << "\nCommand:\n" << command << endl;
+    system(command.c_str());
+
     return 0;
 }
