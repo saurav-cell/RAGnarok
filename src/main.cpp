@@ -126,6 +126,38 @@ map<string,double> buildTFIDF( const map<string,double>& idf,const map<string,in
 }
     return tfidf;
 }  
+
+// cosine similarity
+double cosineSimilarity(
+    const map<string,double>& tfIDF_doc,
+    const map<string,double>& queryTFIDF
+){
+    double dotProduct = 0.0;
+    double docMagnitude = 0.0;
+    double queryMagnitude = 0.0;
+
+    // Dot Product + Query Magnitude
+    for(auto p : queryTFIDF){
+
+        if(tfIDF_doc.find(p.first) != tfIDF_doc.end()){
+            dotProduct += p.second * tfIDF_doc.at(p.first);
+        }
+
+        queryMagnitude += p.second * p.second;
+    }
+
+    // Document Magnitude
+    for(auto p : tfIDF_doc){
+        docMagnitude += p.second * p.second;
+    }
+
+    // Avoid division by zero
+    if(docMagnitude == 0 || queryMagnitude == 0){
+        return 0.0;
+    }
+
+    return dotProduct / (sqrt(docMagnitude) * sqrt(queryMagnitude));
+}
 int main() {
     string line;
     vector<vector<string>> documents;
@@ -155,7 +187,7 @@ int main() {
     }
 
     // Print TF of first document
-   for (int i = 0; i < tf_docs.size(); i++) {
+   /*for (int i = 0; i < tf_docs.size(); i++) {
     cout << "Document " << i << ":\n";
 
     for (auto p : tf_docs[i]) {
@@ -163,7 +195,7 @@ int main() {
     }
 
     cout << endl;
- }
+ }*/
 
  //DF
  map<string, int> df = buildDF(documents);
@@ -218,5 +250,23 @@ for(auto p : queryTFIDF){
     cout << p.first << " : " << p.second << endl;
 }
 
+// Retrieval
+double bestScore = -1.0;
+int bestDocIndex = -1;
+
+for(int i = 0; i < tfidf_docs.size(); i++){
+
+    double score = cosineSimilarity(tfidf_docs[i], queryTFIDF);
+
+    cout << "Document " << i << " Similarity: " << score << endl;
+
+    if(score > bestScore){
+        bestScore = score;
+        bestDocIndex = i;
+    }
+}
+
+cout << "\nBest Matching Document: " << bestDocIndex << endl;
+cout << "Best Similarity Score: " << bestScore << endl;
     return 0;
 }
