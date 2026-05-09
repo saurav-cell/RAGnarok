@@ -7,6 +7,7 @@
 #include <set>
 #include <cmath>
 #include<stdlib.h>
+#include <algorithm>
 
 using namespace std;
 
@@ -172,11 +173,54 @@ int main() {
     }
 
     // Preprocessing pipeline
-   while (getline(file, line)) {
+  string chunk = "";
 
-    rawDocuments.push_back(line);
+while(getline(file, line)){
 
-    string processed = preprocess(line);
+    // Empty line means new paragraph
+    if(line.empty()){
+
+        if(!chunk.empty()){
+
+            rawDocuments.push_back(chunk);
+
+            string processed = preprocess(chunk);
+
+            vector<string> words = splitWords(processed);
+
+            words = filtered(words);
+
+            documents.push_back(words);
+
+            chunk = "";
+        }
+
+        continue;
+    }
+
+    chunk += line + " ";
+    if(chunk.size() > 500){
+
+    rawDocuments.push_back(chunk);
+
+    string processed = preprocess(chunk);
+
+    vector<string> words = splitWords(processed);
+
+    words = filtered(words);
+
+    documents.push_back(words);
+
+    chunk = "";
+}
+}
+
+// Last chunk
+if(!chunk.empty()){
+
+    rawDocuments.push_back(chunk);
+
+    string processed = preprocess(chunk);
 
     vector<string> words = splitWords(processed);
 
@@ -259,40 +303,58 @@ map<string,double> queryTFIDF = buildTFIDF(idf, queryTF);
 }*/
 
 // Retrieval
-double bestScore = -1.0;
-int bestDocIndex = -1;
+vector<pair<double,int>> scores;
 
+// Calculate similarity scores
 for(int i = 0; i < tfidf_docs.size(); i++){
 
     double score = cosineSimilarity(tfidf_docs[i], queryTFIDF);
 
-    //cout << "Document " << i << " Similarity: " << score << endl;
-
-    if(score > bestScore){
-        bestScore = score;
-        bestDocIndex = i;
+    if(score > 0.05){
+        scores.push_back({score, i});
     }
 }
 
-//cout << "\nBest Matching Document: " << bestDocIndex << endl;
+// No match found
+if(scores.empty()){
+    cout << "No relevant context found.\n";
+    return 0;
+}
 
-//cout << "Best Similarity Score: " << bestScore << endl;
+// Sort highest score first
+sort(scores.rbegin(), scores.rend());
+
+cout << "\nTop Retrieved Chunks:\n";
+
+// Build final context
+string finalContext = "";
+
+for(int i = 0; i < 3 && i < scores.size(); i++){
+
+    int idx = scores[i].second;
+
+    cout << "Chunk " << idx
+         << " | Score: "
+         << scores[i].first << endl;
+
+    finalContext += rawDocuments[idx] + "\n";
+}
 //cout << "\nRetrieved Context:\n";
 //cout << rawDocuments[bestDocIndex] << endl;
 
 //prompt construction
 string prompt =
-    "Use the following context to answer the question.\n"
-    "If the answer is not in the context, say you don't know.\n\n"
-    "Context:\n" +
-    rawDocuments[bestDocIndex] +
-    "\n\nQuestion:\n" +
-    query +
-    "\n\nAnswer:\n";
+"You are a question answering assistant.\n"
+"Answer ONLY using the given context.\n"
+"If answer is not present, say: Not found in document.\n"
+"Keep answer short and clear.\n\n"
 
+"Context:\n" + finalContext +
 
-    cout << "\nGenerated Prompt:\n";
-    cout << prompt << endl;
+"\n\nQuestion:\n" + query +
+
+"\n\nAnswer:";
+   
     ofstream promptFile("prompt.txt");
 
     promptFile << prompt;
