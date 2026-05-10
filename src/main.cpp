@@ -160,6 +160,23 @@ double cosineSimilarity(
 
     return dotProduct / (sqrt(docMagnitude) * sqrt(queryMagnitude));
 }
+// Sanitize prompt for CMD: remove newlines, escape double quotes
+string sanitizeForCmd(const string& text) {
+    string result = "";
+    for (int i = 0; i < text.size(); i++) {
+        char c = text[i];
+        if (c == '\n' || c == '\r') {
+            result += ' ';          // flatten newlines to spaces
+        } else if (c == '"') {
+            result += "\\\"";       // escape double quotes
+        } else if (c == '\\') {
+            result += "\\\\";       // escape backslashes
+        } else {
+            result += c;
+        }
+    }
+    return result;
+}
 int main() {
     string line;
     vector<string> rawDocuments;
@@ -286,11 +303,15 @@ for(int i = 0; i < tfidf_docs.size(); i++){
 }*/
 
 //query processing
-string query;
-cout << "Enter query: ";
-getline(cin, query);
-query = preprocess(query);
-vector<string> queryWords = splitWords(query);
+while(true){
+    string query;
+   cout << "\nAsk your question (/exit to quit): ";
+    getline(cin, query);
+    if(query == "/exit"){
+        break;
+    }
+    query = preprocess(query);
+    vector<string> queryWords = splitWords(query);
 queryWords = filtered(queryWords);
 map<string,int> queryTF = buildTF(queryWords);
 map<string,double> queryTFIDF = buildTFIDF(idf, queryTF);
@@ -310,7 +331,7 @@ for(int i = 0; i < tfidf_docs.size(); i++){
 
     double score = cosineSimilarity(tfidf_docs[i], queryTFIDF);
 
-    if(score > 0.05){
+    if(score > 0.15){ // Threshold for relevance
         scores.push_back({score, i});
     }
 }
@@ -318,7 +339,7 @@ for(int i = 0; i < tfidf_docs.size(); i++){
 // No match found
 if(scores.empty()){
     cout << "No relevant context found.\n";
-    return 0;
+    continue;
 }
 
 // Sort highest score first
@@ -342,35 +363,44 @@ for(int i = 0; i < 3 && i < scores.size(); i++){
 //cout << "\nRetrieved Context:\n";
 //cout << rawDocuments[bestDocIndex] << endl;
 
-//prompt construction
+// Prompt construction
 string prompt =
-"You are a question answering assistant.\n"
-"Answer ONLY using the given context.\n"
-"If answer is not present, say: Not found in document.\n"
-"Keep answer short and clear.\n\n"
+    "You are a question answering assistant. "
+    "Answer ONLY using the given context. "
+    "If the answer is not present, say: Not found in document. "
+    "Keep answer short and clear. "
+    "Context: " + finalContext +
+    " Question: " + query +
+    " Answer:";
 
-"Context:\n" + finalContext +
+// Write sanitized prompt to file (for debugging if needed)
+ofstream promptFile("prompt.txt");
+promptFile << prompt;
+promptFile.close();
 
-"\n\nQuestion:\n" + query +
+// Sanitize for CMD embedding
+string safePrompt = sanitizeForCmd(prompt);
 
-"\n\nAnswer:";
-   
-    ofstream promptFile("prompt.txt");
-
-    promptFile << prompt;
-
-    promptFile.close();
-
-    // Call LLM
-    string command =
-    "cmd /c \"\"C:\\Users\\User_PC\\llama.cpp\\build\\bin\\llama-cli.exe\" "
+// Command:
+// - No -f flag (avoids interactive mode in old builds)
+// - -p with sanitized single-line prompt
+// - -n 128: generate exactly 128 tokens then exit
+// - < NUL: redirects stdin from null device so llama-cli
+//          gets EOF immediately and cannot enter interactive mode
+string command =
+    "cd /d C:\\Users\\User_PC\\llama.cpp\\build\\bin && "
+    "llama-cli.exe "
     "-m \"C:\\Users\\User_PC\\Downloads\\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf\" "
-    "-f \"prompt.txt\"\"";
+    "-f \"C:\\Users\\User_PC\\OneDrive\\Desktop\\RAG_QA\\src\\prompt.txt\"";
 
-    cout << "\nRunning TinyLlama...\n";
-
-    cout << "\nCommand:\n" << command << endl;
-    system(command.c_str());
-
+cout << "\nRunning TinyLlama...\n";
+//ofstream outFile("prompt.txt");
+//outFile << prompt;
+//outFile.close();
+cout << command << endl;
+system(command.c_str());
+cout << endl;
+    cout << endl;
+}
     return 0;
 }
