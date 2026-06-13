@@ -8,74 +8,14 @@
 #include <cmath>
 #include<stdlib.h>
 #include <algorithm>
-
+#include "../include/preprocessing.h"
 using namespace std;
 
-// Preprocess (lowercase + remove punctuation)
-string preprocess(string text) {
-    string cleaned = "";
 
-    for (int i = 0; i < text.size(); i++) {
-        char c = tolower(text[i]);
 
-        if ((c >= 'a' && c <= 'z') || c == ' ') {
-            cleaned += c;
-        }
-    }
 
-    return cleaned;
-}
 
-// Split words
-vector<string> splitWords(string text) {
-    vector<string> words;
-    string current = "";
 
-    for (int i = 0; i < text.size(); i++) {
-        if (text[i] != ' ') {
-            current += text[i];
-        } else {
-            if (!current.empty()) {
-                words.push_back(current);
-                current = "";
-            }
-        }
-    }
-
-    if (!current.empty()) {
-        words.push_back(current);
-    }
-
-    return words;
-}
-
-// Stopwords removal
-vector<string> filtered(const vector<string>& words) {
-    vector<string> stopwords = {
-        "a","an","the","and","is","in","on","at","for","to","from",
-        "of","with","by","this","that","it","as","be","are","was","were",
-        "has","have","had","do","does","did","but","not","or","can"
-    };
-
-    vector<string> filteredWords;
-
-    for (int i = 0; i < words.size(); i++) {
-        bool isStopWord = false;
-
-        for (int j = 0; j < stopwords.size(); j++) {
-            if (words[i] == stopwords[j]) {
-                isStopWord = true;
-                break;
-            }
-        }
-
-        if (!isStopWord) {
-            filteredWords.push_back(words[i]);
-        }
-    }
-
-    return filteredWords;
-}
 
 // TF function
 map<string, int> buildTF(const vector<string>& words) {
@@ -182,7 +122,7 @@ int main() {
     vector<string> rawDocuments;
     vector<vector<string>> documents;
 
-    ifstream file("../data/docs.txt");
+    ifstream file("data/docs.txt");
 
     if (!file) {
         cout << "Error opening file" << endl;
@@ -374,7 +314,7 @@ string prompt =
     " Answer:";
 
 // Write sanitized prompt to file (for debugging if needed)
-ofstream promptFile("prompt.txt");
+ofstream promptFile("data/prompt.txt");
 promptFile << prompt;
 promptFile.close();
 
@@ -391,10 +331,10 @@ string command =
     "cd /d C:\\Users\\User_PC\\llama.cpp\\build\\bin && "
     "llama-cli.exe "
     "-m \"C:\\Users\\User_PC\\Downloads\\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf\" "
-    "-f \"C:\\Users\\User_PC\\OneDrive\\Desktop\\RAG_QA\\src\\prompt.txt\"";
+    "-f \"C:\\Users\\User_PC\\OneDrive\\Desktop\\RAG_QA\\data\\prompt.txt\"";
 
 cout << "\nRunning TinyLlama...\n";
-//ofstream outFile("prompt.txt");
+//ofstream outFile("data/prompt.txt");
 //outFile << prompt;
 //outFile.close();
 cout << command << endl;
