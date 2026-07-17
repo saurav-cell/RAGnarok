@@ -1,15 +1,16 @@
 # RAGnarok
 
-::: {align="center"}
+<div align="center">
+
 ![C++](https://img.shields.io/badge/C%2B%2B-17-blue)
 ![llama.cpp](https://img.shields.io/badge/llama.cpp-Local%20LLM-green)
-![TinyLlama](https://img.shields.io/badge/Model-TinyLlama-orange) ![CPU
-Only](https://img.shields.io/badge/Execution-CPU%20Only-red)
+![TinyLlama](https://img.shields.io/badge/Model-TinyLlama-orange)
+![CPU Only](https://img.shields.io/badge/Execution-CPU%20Only-red)
 ![Status](https://img.shields.io/badge/Status-Active%20Development-success)
 
 ### A Lightweight Offline Retrieval-Augmented Generation (RAG) System built from scratch in C++
-:::
 
+</div>
 ------------------------------------------------------------------------
 
 ## Overview
@@ -43,7 +44,7 @@ and is designed to be lightweight and easy to understand.
 
 ------------------------------------------------------------------------
 
-## Architecture
+
 
 ## 🏗️ Architecture
 
