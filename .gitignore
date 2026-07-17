@@ -3,4 +3,4 @@ build/
 project_plan.md
 *.obj
 *.gguf
-prompt.txt
+data/prompt.txt

@@ -123,7 +123,7 @@ int main() {
     vector<string> rawDocuments;
     vector<vector<string>> documents;
 
-    ifstream file("data/docs.txt");
+    ifstream file("data/knowledge_base.txt");
 
     if (!file) {
         cout << "Error opening file" << endl;
