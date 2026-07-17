@@ -8,6 +8,7 @@
 #include <cmath>
 #include<stdlib.h>
 #include <algorithm>
+#include <chrono>
 #include "../include/preprocessing.h"
 using namespace std;
 
@@ -241,9 +242,21 @@ for(int i = 0; i < tfidf_docs.size(); i++){
 
     cout << endl;
 }*/
+cout << "====================================================\n";
+cout << "                 RAGnarok v1.0\n";
+cout << "        Lightweight Offline RAG System\n";
+cout << "====================================================\n\n";
 
+cout << "Language Model : TinyLlama 1.1B (GGUF)\n";
+cout << "Retriever      : TF-IDF + Cosine Similarity\n";
+cout << "Execution Mode : Local CPU\n";
+cout << "Documents      : " << rawDocuments.size() << "\n";
+cout << "Chunk Size     : 500 characters\n";
+
+cout << "\n====================================================\n";
 //query processing
 while(true){
+   
     string query;
    cout << "\nAsk your question (/exit to quit): ";
     getline(cin, query);
@@ -262,7 +275,7 @@ map<string,double> queryTFIDF = buildTFIDF(idf, queryTF);
 /*for(auto p : queryTFIDF){
     cout << p.first << " : " << p.second << endl;
 }*/
-
+auto retrievalStart = chrono::high_resolution_clock::now();
 // Retrieval
 vector<pair<double,int>> scores;
 
@@ -285,7 +298,9 @@ if(scores.empty()){
 // Sort highest score first
 sort(scores.rbegin(), scores.rend());
 
-cout << "\nTop Retrieved Chunks:\n";
+cout << "\n========================================\n";
+cout << "          Top Retrieved Chunks\n";
+cout << "========================================\n\n";
 
 // Build final context
 string finalContext = "";
@@ -294,15 +309,24 @@ for(int i = 0; i < 3 && i < scores.size(); i++){
 
     int idx = scores[i].second;
 
-    cout << "Chunk " << idx
+    cout << "Source : OOPs_CPP_Academic_Notes.pdf" << endl;
+
+    cout << "Chunk "
+         << idx
          << " | Score: "
-         << scores[i].first << endl;
+         << scores[i].first
+         << endl << endl;
 
     finalContext += rawDocuments[idx] + "\n";
 }
 //cout << "\nRetrieved Context:\n";
 //cout << rawDocuments[bestDocIndex] << endl;
+auto retrievalEnd = chrono::high_resolution_clock::now();
 
+auto retrievalTime =
+    chrono::duration_cast<chrono::milliseconds>(
+        retrievalEnd - retrievalStart
+    );
 // Prompt construction
 string prompt =
     "You are a question answering assistant. "
@@ -331,16 +355,31 @@ string command =
     "cd /d C:\\Users\\User_PC\\llama.cpp\\build\\bin && "
     "llama-cli.exe "
     "-m \"C:\\Users\\User_PC\\Downloads\\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf\" "
-    "-f \"C:\\Users\\User_PC\\OneDrive\\Desktop\\RAG_QA\\data\\prompt.txt\"";
+    "-f \"C:\\Users\\User_PC\\OneDrive\\Desktop\\RAGNAROK\\data\\prompt.txt\"";
 
+
+    cout << "\nRetrieval Time: "
+     << retrievalTime.count()
+     << " ms\n";
 cout << "\nRunning TinyLlama...\n";
 //ofstream outFile("data/prompt.txt");
 //outFile << prompt;
 //outFile.close();
-cout << command << endl;
+
+cout << "\nGenerating answer...\n\n";
+
 system(command.c_str());
-cout << endl;
-    cout << endl;
+
+
+
+
+
+
+cout << "Retrieval Time : "
+     << retrievalTime.count()
+     << " ms\n";
+
+
 }
     return 0;
 }
