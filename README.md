@@ -99,17 +99,16 @@ RAGnarok
 
 ------------------------------------------------------------------------
 
-## Tech Stack
+## 🛠️ Tech Stack
 
-  Component     Technology
-  ------------- ---------------------
-  Language      C++17
-  Retrieval     TF-IDF
-  Similarity    Cosine Similarity
-  LLM Runtime   llama.cpp
-  Model         TinyLlama 1.1B GGUF
-  Execution     CPU
-
+| Component | Technology |
+|-----------|------------|
+| **Language** | C++17 |
+| **Retrieval** | TF-IDF |
+| **Similarity Search** | Cosine Similarity |
+| **LLM Runtime** | llama.cpp |
+| **Model** | TinyLlama 1.1B (GGUF) |
+| **Execution** | CPU Only |
 ------------------------------------------------------------------------
 
 ## How it Works
